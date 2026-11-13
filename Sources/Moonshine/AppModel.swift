@@ -52,6 +52,9 @@ import MoonshinePlatform
     var liveDemo: Bool { demo && liveDemoEnabled }
     var engine: SemanticEngine?
     private var semanticTask: Task<Void, Never>?
+    private var activationTask: Task<Void, Never>?
+    private var activationGeneration: UInt64 = 0
+    private let activation: ((WorkspaceItem) async throws -> Void)?
     private var refreshTask: Task<Void, Never>?
     private var previewTask: Task<Void, Never>?
     private var previewGeneration: UInt64 = 0
@@ -75,11 +78,13 @@ import MoonshinePlatform
     var showSettings: (() -> Void)?
     var shortcutChanged: (() -> Void)?
     var keyPath: String? { UserDefaults.standard.string(forKey: "keyPath") ?? Bundle.main.object(forInfoDictionaryKey: "MoonshineDevelopmentKeyPath") as? String }
-    init() {
+    init(activation: ((WorkspaceItem) async throws -> Void)? = nil) {
+        self.activation = activation
         demo = CommandLine.arguments.contains("--demo")
         liveDemoEnabled = demo && CommandLine.arguments.contains("--live-decisions") && !CommandLine.arguments.contains("--self-test")
-        pairingCode = UserDefaults.standard.string(forKey: "bridgeToken") ?? (UUID().uuidString + UUID().uuidString).replacingOccurrences(of: "-", with: "").lowercased()
-        UserDefaults.standard.set(pairingCode, forKey: "bridgeToken")
+        // Synthetic demos and native checks never read or rewrite the live pairing identity.
+        pairingCode = (demo ? nil : UserDefaults.standard.string(forKey: "bridgeToken")) ?? (UUID().uuidString + UUID().uuidString).replacingOccurrences(of: "-", with: "").lowercased()
+        if !demo { UserDefaults.standard.set(pairingCode, forKey: "bridgeToken") }
         bridge = BrowserBridge(token: pairingCode)
         configureSemantic()
         search.setUsePageContext(pageContextEnabled)
@@ -117,7 +122,13 @@ import MoonshinePlatform
         if search.isSearching { refine() }
         refresh()
     }
-    func close() { cancelPreviews(); isPresented = false; semanticTask?.cancel(); semanticTask = nil; isRefining = false; search.setQuery("") }
+    func cancelActivation() {
+        activationGeneration &+= 1; activationTask?.cancel(); activationTask = nil; activationPending = false
+    }
+    func close() {
+        cancelActivation()
+        cancelPreviews(); isPresented = false; semanticTask?.cancel(); semanticTask = nil; isRefining = false; search.setQuery("")
+    }
     func queryChanged(_ value: String) {
         finishOpeningForInput?()
         pointerHasMoved = false; browsingTabs = false; refinementMilliseconds = nil
@@ -281,28 +292,46 @@ import MoonshinePlatform
     }
     func activate(_ id: String? = nil) {
         if let id { select(id) }
-        guard !activationPending, let item = search.selected, selectableIDs.contains(item.id) else { return }
-        if demo { notice = "This is a synthetic fixture. Open the real workspace from the menu bar."; return }
+        guard isPresented, !activationPending, let item = search.selected, selectableIDs.contains(item.id) else { return }
+        if demo && activation == nil { notice = "This is a synthetic fixture. Open the real workspace from the menu bar."; return }
         activationPending = true; cancelPreviews()
+        activationGeneration &+= 1
+        let generation = activationGeneration
         let activationTimer = LatencyTimer()
-        Task {
-            defer { activationPending = false }
+        activationTask = Task {
+            defer {
+                if activationGeneration == generation { activationPending = false; activationTask = nil }
+            }
             do {
-                switch item.target {
-                case .accessibility: try await windows.activate(item.target)
-                case .chrome: try await chrome.activate(item.target)
-                case .browserBridge:
-                    let application = try BrowserApplication(bundleID: item.bundleID)
-                    try await bridge.activate(item.target)
-                    let focusTimer = LatencyTimer()
-                    prepareBrowserHandoff?()
-                    try await application.bringForward()
-                    await Metrics.shared.record("browser_native_focus", milliseconds: focusTimer.milliseconds)
-                case .unavailable: throw AXIsProcessTrusted() ? NavigationError.unsupported : NavigationError.permission
-                }
+                try Task.checkCancellation()
+                if let activation { try await activation(item) }
+                else { try await activateWorkspaceItem(item) }
+                try Task.checkCancellation()
+                guard isPresented, activationGeneration == generation else { return }
                 dismiss?()
                 await Metrics.shared.record("activation_total", milliseconds: activationTimer.milliseconds)
-            } catch { notice = (error as? LocalizedError)?.errorDescription ?? "The selected item is unavailable."; recoverFocus?(); refresh() }
+            } catch is CancellationError {
+                // Closing the panel abandons this operation; it must not recover focus.
+            } catch {
+                guard !Task.isCancelled, isPresented, activationGeneration == generation else { return }
+                notice = (error as? LocalizedError)?.errorDescription ?? "The selected item is unavailable."
+                recoverFocus?(); refresh()
+            }
+        }
+    }
+    private func activateWorkspaceItem(_ item: WorkspaceItem) async throws {
+        switch item.target {
+        case .accessibility: try await windows.activate(item.target)
+        case .chrome: try await chrome.activate(item.target)
+        case .browserBridge:
+            let application = try BrowserApplication(bundleID: item.bundleID)
+            try await bridge.activate(item.target)
+            try Task.checkCancellation()
+            let focusTimer = LatencyTimer()
+            prepareBrowserHandoff?()
+            try await application.bringForward()
+            await Metrics.shared.record("browser_native_focus", milliseconds: focusTimer.milliseconds)
+        case .unavailable: throw AXIsProcessTrusted() ? NavigationError.unsupported : NavigationError.permission
         }
     }
     func saveSettings() {

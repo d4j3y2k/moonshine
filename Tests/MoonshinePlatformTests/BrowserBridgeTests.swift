@@ -76,4 +76,44 @@ final class BrowserBridgeTests: XCTestCase {
         let removed = await bridge.inventory()
         XCTAssertTrue(removed.isEmpty)
     }
+    func testClosedTabCannotSucceedThroughAnOlderAcknowledgement() async throws {
+        let bridge = BrowserBridge(token: "synthetic")
+        _ = await bridge.sync(try message())
+        let activation = Task { try await bridge.activate(.browserBridge(client: client, session: session, tabID: 17)) }
+        try await Task.sleep(for: .milliseconds(30))
+        let response = try commands(await bridge.sync(try message()))
+        let command = try XCTUnwrap(response.first)
+        _ = await bridge.sync(try message(acks: [["id": command["id"]!, "success": true]], tabs: []))
+        do { try await activation.value; XCTFail("An acknowledged tab that is already closed must not succeed") }
+        catch { XCTAssertTrue(error is NavigationError) }
+    }
+
+    func testCancellationRemovesUndeliveredCommand() async throws {
+        let bridge = BrowserBridge(token: "synthetic")
+        _ = await bridge.sync(try message())
+        let activation = Task { try await bridge.activate(.browserBridge(client: client, session: session, tabID: 17)) }
+        try await Task.sleep(for: .milliseconds(30))
+        activation.cancel()
+        try await Task.sleep(for: .milliseconds(30))
+        let response = try commands(await bridge.sync(try message()))
+        XCTAssertTrue(response.isEmpty, "Cancelled selection must not be sent to the browser")
+        do { try await activation.value; XCTFail("Cancelled selection must fail") }
+        catch { XCTAssertTrue(error is CancellationError) }
+    }
+
+    func testExpiredAcknowledgementCannotCompleteAnActivation() async throws {
+        let bridge = BrowserBridge(token: "synthetic")
+        _ = await bridge.sync(try message())
+        let activation = Task { try await bridge.activate(.browserBridge(client: client, session: session, tabID: 17)) }
+        try await Task.sleep(for: .milliseconds(30))
+        let response = try commands(await bridge.sync(try message()))
+        let command = try XCTUnwrap(response.first)
+        // Commands expire at 4.5 seconds, independently of the five-second cleanup.
+        // The same wall-clock check is needed when a process resumes after sleep.
+        try await Task.sleep(for: .milliseconds(4600))
+        _ = await bridge.sync(try message(acks: [["id": command["id"]!, "success": true]]))
+        do { try await activation.value; XCTFail("Expired acknowledgement must not succeed") }
+        catch { XCTAssertTrue(error is NavigationError) }
+    }
+
 }

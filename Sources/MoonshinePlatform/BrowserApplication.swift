@@ -17,9 +17,11 @@ import MoonshineCore
     }
 
     public func bringForward() async throws {
+        try Task.checkCancellation()
         guard isCurrent else { throw NavigationError.missing }
         if !application.isActive || application.isHidden {
             await Metrics.shared.count("browser_ack_requires_foreground")
+            try Task.checkCancellation()
             // Launch Services can reactivate an existing app from a nonactivating
             // panel, where NSRunningApplication.activate may reject the request.
             guard let url = application.bundleURL else { throw NavigationError.missing }

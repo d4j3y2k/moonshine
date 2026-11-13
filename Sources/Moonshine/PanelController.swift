@@ -132,6 +132,11 @@ final class OverviewPanel: NSPanel {
         else { present(focus: focus) }
     }
     func present(focus: Bool = true, searchQuery: String? = nil) {
+        model.cancelActivation()
+        // Reopening is a new intent even if the outgoing launch has not replied.
+        // Its delayed success/failure must not close or restore this presentation.
+        handoffGeneration += 1; handoffPending = false
+
         let started = LatencyTimer()
         if model.isClosing { finishClosing() }
         let opening = !model.isPresented
@@ -196,6 +201,7 @@ final class OverviewPanel: NSPanel {
     private static var reduceMotion: Bool { NSWorkspace.shared.accessibilityDisplayShouldReduceMotion }
     func dismiss(restore: Bool) {
         guard model.isPresented, !model.isClosing else { return }
+        model.cancelActivation()
         handoffGeneration += 1; handoffPending = false; pendingSearchCaret = false
         guard animatesZoom, panel.isVisible else {
             finishClosing()

@@ -27,6 +27,7 @@ public actor ChromeAdapter {
         }
     }
     public func activate(_ target: ActivationTarget) async throws {
+        try Task.checkCancellation()
         guard case let .chrome(pid, launch, tabID) = target else { throw NavigationError.missing }
         let valid = ProcessLifetime.matches(pid: pid, start: launch)
         guard valid else { throw NavigationError.missing }

@@ -1,10 +1,16 @@
+import argparse
 import json
 import pathlib
 import shutil
 
 root = pathlib.Path(__file__).resolve().parent.parent
+parser = argparse.ArgumentParser()
+parser.add_argument("--output-dir", type=pathlib.Path, default=root / "build")
+output = parser.parse_args().output_dir
 for browser in ["Chrome", "Safari"]:
-    target = root / "build" / (browser + "Extension")
+    target = output / (browser + "Extension")
+    if target.exists():
+        shutil.rmtree(target)
     target.mkdir(parents=True, exist_ok=True)
     for name in ["background.js", "context.js", "popup.js", "popup.html"]:
         shutil.copy2(root / "BrowserExtension" / name, target / name)

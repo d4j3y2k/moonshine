@@ -10,11 +10,23 @@ Press **Control–Option–M**, start typing, and jump to the exact window or ta
 
 **Works on its own.** You can also pair it with [Spleen](https://github.com/d4j3y2k/spleen), a separate app for returning to AI conversations. With both installed, **Tab / Shift–Tab** carries your current search between them. Neither app requires the other, an API key, or a subscription for local navigation.
 
-> **Experimental, built from source.** Tested on Apple silicon with macOS 26. The deployment target is macOS 14; earlier systems and Intel Macs have not been independently verified. There is no notarized download or packaged Safari extension yet.
+> **Experimental.** Tested on Apple silicon with macOS 26. The deployment target is macOS 14; earlier systems have not been independently verified. Intel builds and a permanent packaged Safari extension are not provided. App preview packaging is available; notarized public distribution is still pending.
 
 ## Install
 
-Requires **Xcode 26 or later** with its macOS SDK selected as the active developer toolchain, plus **Python 3** for preparing the optional browser extensions. There are no third-party Swift dependencies. Node.js is needed only for browser-extension tests.
+### Download a packaged app
+
+The [Releases page](https://github.com/d4j3y2k/moonshine/releases) is the intended download location. **A notarized public download is not available yet.** The repository now includes packaging and a draft-release workflow; see [distribution status](docs/DISTRIBUTION.md).
+
+When a release is available, choose its **macos-arm64-notarized.zip** asset for Apple silicon, expand it, and move **Moonshine.app** into `~/Applications`. Open that installed copy. A packaged app needs no Xcode, Python, Git, or API key. The extracted folder also includes `Install.command`, an optional checked installer you can run with `/bin/zsh ./Install.command` from that folder. It preserves your data and refuses unsafe replacements.
+
+Files labeled **preview** are developer previews, not notarized downloads. macOS may block them after download; use a notarized release or build from source. No installer removes quarantine or changes Gatekeeper. Intel binaries are not provided; the macOS 14 deployment target remains unverified below macOS 26.
+
+For a preview you trust, Apple documents [per-app opening options](https://support.apple.com/en-us/102445); this installer never changes those protections.
+
+### Build from source
+
+Requires **Xcode 26 or later** with its macOS SDK selected as the active developer toolchain, plus **Python 3** for package validation and preparing the optional browser extensions. There are no third-party Swift dependencies. Node.js is needed only for browser-extension tests.
 
 ```sh
 git clone https://github.com/d4j3y2k/moonshine.git
@@ -23,7 +35,7 @@ cd moonshine
 open "$HOME/Applications/Moonshine.app"
 ```
 
-The installer builds locally, verifies the app's signature, and copies it to `~/Applications`. It needs no administrator access. Quit any running Moonshine before installing or updating. To build without installing, run `./scripts/build.sh` and open `build/Moonshine.app`.
+The installer builds locally, verifies the app's signature, and copies it to `~/Applications`. It needs no administrator access. Quit the installed Moonshine before updating it. To build without installing, run `./scripts/build.sh` and open `build/Moonshine.app`.
 
 On first launch, open **Settings** from the gear or menu bar:
 
@@ -68,6 +80,8 @@ See the [connection guide](docs/INTEGRATION.md) for details and troubleshooting.
 **Chrome:** Enable Chrome Automation in Settings for the simplest setup. Alternatively, load `build/ChromeExtension` from Chrome's Extensions page using Developer mode → Load unpacked.
 
 **Safari 26:** In Safari Settings → Developer, choose **Add Temporary Extension…** and select `build/SafariExtension`. Enable it for the intended ordinary profile and grant website access when Safari requests it. Safari may require its developer features and unsigned-extension approval. Temporary extensions expire on Safari quit or after 24 hours; this is a development installation, not a permanent Safari package.
+
+In an extracted app download, these folders are under `BrowserExtensions/` instead of `build/`.
 
 For either extension, copy the **pairing code** from Moonshine Settings into its toolbar popup and choose **Connect**. This code is separate from any API key. Pair each desired browser profile. When Chrome extension clients are connected, their inventory replaces Chrome Automation's inventory; unpaired Chrome profiles will not appear.
 

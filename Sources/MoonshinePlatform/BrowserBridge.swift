@@ -70,9 +70,18 @@ public actor BrowserBridge {
         }
         let changed = clients[message.client]?.items != items
         clients[message.client] = Client(session: message.session, updated: Date(), items: items)
-        // A restarted worker/browser cannot complete commands from its old session.
-        for (id, value) in pending where value.client == message.client && value.command.session != message.session {
-            pending.removeValue(forKey: id)?.continuation.resume(throwing: NavigationError.missing)
+        // A restart or a closed/private tab invalidates the exact target before
+        // acknowledging commands, including success queued just before a tab closed.
+        let liveTabs = Set(items.compactMap { item -> Int? in
+            guard case let .browserBridge(_, _, tabID) = item.target else { return nil }
+            return tabID
+        })
+        for (id, value) in pending where value.client == message.client {
+            if value.command.session != message.session || !liveTabs.contains(value.command.tabID) {
+                pending.removeValue(forKey: id)?.continuation.resume(throwing: NavigationError.missing)
+            } else if value.command.expiresAt <= Date().timeIntervalSince1970 * 1000 {
+                expire(id)
+            }
         }
         if changed { inventoryChanged() }
         for ack in message.acknowledgements ?? [] {
@@ -97,6 +106,8 @@ public actor BrowserBridge {
             }
         }
         guard clients[message.client]?.session == message.session else { return reply([], version: message.transportVersion) }
+        // Wall-clock expiry still applies if a waiting poll resumes after sleep.
+        for (id, value) in pending where value.command.expiresAt <= Date().timeIntervalSince1970 * 1000 { expire(id) }
         for (id, value) in pending where value.client == message.client && value.command.session == message.session && value.delivered == nil {
             pending[id]?.delivered = LatencyTimer()
             let elapsed = value.timer.milliseconds
@@ -119,12 +130,18 @@ public actor BrowserBridge {
               Date().timeIntervalSince(source.updated) < 12,
               source.items.contains(where: { $0.target == target }) else { throw NavigationError.missing }
         let id = UUID().uuidString
-        try await withCheckedThrowingContinuation { continuation in
-            pending[id] = Pending(client: client, command: Command(id: id, session: session, tabID: tabID, expiresAt: Date().timeIntervalSince1970 * 1000 + 4500), continuation: continuation, timer: LatencyTimer())
-            if polls[client]?.session == session { polls.removeValue(forKey: client)?.continuation.resume() }
-            Task { try? await Task.sleep(for: .seconds(5)); self.expire(id) }
+        try await withTaskCancellationHandler {
+            try Task.checkCancellation()
+            try await withCheckedThrowingContinuation { continuation in
+                pending[id] = Pending(client: client, command: Command(id: id, session: session, tabID: tabID, expiresAt: Date().timeIntervalSince1970 * 1000 + 4500), continuation: continuation, timer: LatencyTimer())
+                if polls[client]?.session == session { polls.removeValue(forKey: client)?.continuation.resume() }
+                Task { try? await Task.sleep(for: .seconds(5)); self.expire(id) }
+            }
+        } onCancel: {
+            Task { await self.cancel(id) }
         }
     }
+    private func cancel(_ id: String) { pending.removeValue(forKey: id)?.continuation.resume(throwing: CancellationError()) }
     private func expire(_ id: String) { pending.removeValue(forKey: id)?.continuation.resume(throwing: NavigationError.browserUnavailable) }
 }
 

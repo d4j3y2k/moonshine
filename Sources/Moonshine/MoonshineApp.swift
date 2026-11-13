@@ -33,6 +33,9 @@ import MoonshineCore
                     try panel.render(to: URL(fileURLWithPath: path).appendingPathComponent("zoom-start-fixtures.png"))
                     model.spread = true
                     try await Task.sleep(for: .milliseconds(80))
+                    // Pointer movement during fixture rendering can make an explicit
+                    // selection. Start this keyboard-only check from a fresh search.
+                    model.search.begin()
                     model.queryChanged("documentation"); model.cycle(backwards: false)
                     guard model.search.selectedID == "fixture-tab3" else { throw CocoaError(.validationMissingMandatoryProperty) }
                     let selected = model.search.selectedID

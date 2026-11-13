@@ -1,5 +1,15 @@
 # Setup
 
+## Install a download
+
+Check the [Releases page](https://github.com/d4j3y2k/moonshine/releases) for an Apple silicon asset ending in `macos-arm64-notarized.zip`. **Notarized public distribution is still pending**; preview assets are for developer evaluation and may be blocked after download. Do not disable Gatekeeper or remove quarantine to install a preview. The source build below remains available.
+
+For a notarized download, expand the ZIP and move `Moonshine.app` into `~/Applications` (create that folder in Finder if needed), then open it. No developer tools are required. Quit the installed app before updating. To use the checked installer instead, open Terminal in the extracted folder and run `/bin/zsh ./Install.command`. It accepts `--destination /path/to/folder`, rejects a running destination, wrong app, symlink, changed signing team, invalid signature, or older build, and restores the previous app if the final move fails. `--allow-downgrade` is available for an intentional rollback. User data, preferences and credentials are separate and are never removed by the installer.
+
+Keep one installed copy of each companion app. Run each once before using Tab handoff. A downloaded Moonshine bundle includes optional browser-extension folders under `BrowserExtensions/`; these remain development extensions, not permanent Safari packages.
+
+For a preview you trust, Apple documents [per-app opening options](https://support.apple.com/en-us/102445); this installer never changes those protections.
+
 ## Build and install
 
 Use an Apple silicon Mac with Xcode 26 or later and Python 3. In Xcode Settings → Locations, select the installed Xcode under Command Line Tools. `xcode-select -p` should point inside Xcode, and `swift --version` should report Swift 6 or later. A Command Line Tools-only installation may not provide the SDK this app uses.
@@ -45,7 +55,9 @@ For explicitly authorized developer smoke testing only, `moonshine-check` can re
 
 ## Update
 
-Quit Moonshine from its menu bar, then run from your clone:
+For a packaged update, quit the installed Moonshine, download and expand the new ZIP, and use its `Install.command` or replace the app in Finder. Keep the optional extension folders in a stable location and reload them in the browser.
+
+For a source update, quit Moonshine from its menu bar, then run from your clone:
 
 ```sh
 git pull --ff-only

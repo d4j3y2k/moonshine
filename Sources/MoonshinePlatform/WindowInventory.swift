@@ -188,6 +188,7 @@ public actor WindowInventory {
         return output
     }
     public func activate(_ target: ActivationTarget) async throws {
+        try Task.checkCancellation()
         guard AXIsProcessTrusted() else { throw NavigationError.permission }
         guard case let .accessibility(pid, launch, token) = target, let entry = retained[token],
               entry.app.pid == pid, entry.app.launch == launch else { throw NavigationError.missing }
@@ -197,7 +198,11 @@ public actor WindowInventory {
         AXUIElementSetMessagingTimeout(application, 0.2)
         guard let windows = value(application, kAXWindowsAttribute) as? [AXUIElement], windows.contains(where: { CFEqual($0, entry.element) }) else { throw NavigationError.missing }
         AXUIElementSetAttributeValue(entry.element, kAXMinimizedAttribute as CFString, kCFBooleanFalse)
-        _ = await MainActor.run { NSRunningApplication(processIdentifier: pid)?.activate(options: []) }
+        _ = try await MainActor.run {
+            try Task.checkCancellation()
+            return NSRunningApplication(processIdentifier: pid)?.activate(options: [])
+        }
+        try Task.checkCancellation()
         AXUIElementSetAttributeValue(entry.element, kAXMainAttribute as CFString, kCFBooleanTrue)
         guard AXUIElementPerformAction(entry.element, kAXRaiseAction as CFString) == .success else { throw NavigationError.unsupported }
         // Most apps confirm immediately. Wait only while focus is actually pending,
