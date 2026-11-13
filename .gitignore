@@ -1,0 +1,17 @@
+.build/
+build/
+dist/
+.env*
+!.env.example
+.DS_Store
+*.xcuserstate
+xcuserdata/
+local-evaluation/
+.swiftpm/
+.local-state/
+evidence/
+*.log
+*.pem
+*.p12
+*.pfx
+__pycache__/

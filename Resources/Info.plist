@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleName</key>
+	<string>Moonshine</string>
+	<key>CFBundleDisplayName</key>
+	<string>Moonshine</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.d4j3y2k.moonshine</string>
+	<key>CFBundleExecutable</key>
+	<string>Moonshine</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>14.0</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Moonshine reads non-private Chrome tab titles and URLs and activates the exact existing tab you select.</string>
+	<key>NSScreenCaptureUsageDescription</key>
+	<string>Moonshine shows local window previews in your workspace overview. Previews are never sent to OpenAI.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.d4j3y2k.moonshine.search</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>moonshine-search</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

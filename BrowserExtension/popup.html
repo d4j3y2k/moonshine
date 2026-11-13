@@ -1,0 +1,10 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+body{font:13px system-ui;width:330px;padding:16px;color-scheme:light dark}h1{font-size:19px}h2{font-size:14px;margin-top:22px}input{box-sizing:border-box;width:100%;padding:9px;margin:8px 0}button{padding:7px 10px;margin:3px 2px 3px 0}p{line-height:1.5;color:GrayText}pre{font:11px system-ui;white-space:pre-wrap;overflow-wrap:anywhere;max-height:220px;overflow:auto;padding:10px;background:rgba(127,127,127,.12);border-radius:6px}#site{overflow-wrap:anywhere}
+</style></head><body>
+<h1>Moonshine</h1><p>Connect your already-open, non-private tabs to the local app.</p>
+<label>Pairing code<input id="token" type="password" autocomplete="off"></label><button id="connect">Connect</button><p id="status"></p>
+<h2>Understand this site</h2><p id="site">Loading current tab…</p>
+<p>Read this site's page descriptions, headings, and button labels. No page body, form values, or screenshots. Context stays in memory for open tabs. Moonshine can send these labels to OpenAI when “Use page context” is on in its Settings.</p>
+<button id="enable" disabled>Enable for this site</button><button id="disable" disabled>Stop using this site</button>
+<button id="preview" disabled>Preview collected context</button><pre id="context">No page context collected yet.</pre>
+<script src="context.js"></script><script src="popup.js"></script></body></html>
