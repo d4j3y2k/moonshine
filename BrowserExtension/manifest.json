@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Moonshine Workspace Bridge",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "description": "Find and activate existing non-private tabs from the local Moonshine app.",
   "permissions": ["tabs", "storage", "alarms"],
   "optional_permissions": ["scripting"],

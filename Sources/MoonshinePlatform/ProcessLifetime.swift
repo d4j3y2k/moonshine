@@ -2,7 +2,7 @@ import AppKit
 import Darwin
 
 public enum ProcessLifetime {
-    /// Some long-running system apps (including Finder on the development Mac) have
+    /// Some long-running system apps (including Finder on the tested Mac) have
     /// no NSRunningApplication.launchDate. Kernel process start time also prevents PID reuse.
     public static func start(of pid: Int32) -> Double? {
         guard pid > 0 else { return nil }

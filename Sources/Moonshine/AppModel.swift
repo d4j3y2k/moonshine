@@ -338,11 +338,11 @@ import MoonshinePlatform
     }
     static let fixtures: [WorkspaceItem] = [
         WorkspaceItem(id: "fixture-code", kind: .window, app: "Xcode", title: "Moonshine — WindowInventory.swift", context: "Synthetic window", aspectRatio: 1.6, screenFrame: .init(x: 60, y: 90, width: 1120, height: 700)),
-        WorkspaceItem(id: "fixture-music", kind: .window, app: "Logic Pro", title: "Orphne · late-night loop", context: "Synthetic window", aspectRatio: 1.85, screenFrame: .init(x: 520, y: 330, width: 1110, height: 600)),
+        WorkspaceItem(id: "fixture-music", kind: .window, app: "Logic Pro", title: "Nocturne · late-night loop", context: "Synthetic window", aspectRatio: 1.85, screenFrame: .init(x: 520, y: 330, width: 1110, height: 600)),
         WorkspaceItem(id: "fixture-notes", kind: .window, app: "Notes", title: "Website redesign — typography, navigation, and an unusually long set of notes that should remain readable", context: "Synthetic window", aspectRatio: 0.85, screenFrame: .init(x: 1330, y: 150, width: 510, height: 600)),
         WorkspaceItem(id: "fixture-tab1", kind: .browserTab, app: "Safari", title: "Envelope generator — attack, decay, sustain, release", url: "https://example.org/music/envelopes", context: "Synthetic · Window 1"),
         WorkspaceItem(id: "fixture-tab2", kind: .browserTab, app: "Chrome", title: "Documentation", url: "https://example.com/swift", context: "Synthetic · Window 2"),
         WorkspaceItem(id: "fixture-tab3", kind: .browserTab, app: "Safari", title: "Documentation", url: "https://example.org/audio", context: "Synthetic · Window 3"),
-        WorkspaceItem(id: "fixture-tab4", kind: .browserTab, app: "Chrome", title: "Keypad — harmony sketches", url: "https://example.com/keypad", context: "Synthetic · Window 2")
+        WorkspaceItem(id: "fixture-tab4", kind: .browserTab, app: "Chrome", title: "Chordbook — harmony sketches", url: "https://example.com/chordbook", context: "Synthetic · Window 2")
     ]
 }

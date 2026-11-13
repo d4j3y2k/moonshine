@@ -28,15 +28,15 @@ import MoonshinePlatform
             } else if args.contains("--live-context-smoke") {
                 let key = try CredentialFile.read(path: FileManager.default.currentDirectoryPath + "/.env.local")
                 let engine = SemanticEngine(transport: LiveDecisionTransport(key: key))
-                let url = "https://example.org/keypad"
-                let enriched = WorkspaceItem(id: "synthetic-keypad", kind: .browserTab, app: "Chrome", title: "Keypad", url: url,
+                let url = "https://example.org/chordbook"
+                let enriched = WorkspaceItem(id: "synthetic-chordbook", kind: .browserTab, app: "Chrome", title: "Chordbook", url: url,
                     pageContext: PageContext(sourceURL: url, summary: "Interactive piano keyboard for composing melodies and chords.", headings: ["Piano keyboard", "Chord progression"], controls: ["Play", "Record", "Transpose", "Tempo"]))
                 let unrelated = WorkspaceItem(id: "synthetic-settings", kind: .browserTab, app: "Safari", title: "Account settings", url: "https://example.org/settings")
                 let query = "practice an instrument"
                 let before = try await engine.evaluate(DecisionBatch(query: query, evidence: [enriched.evidence, unrelated.evidence]))
                 let after = try await engine.evaluate(DecisionBatch(query: query, evidence: [enriched.evidence(includePageContext: true), unrelated.evidence]))
                 print("Live context comparison · synthetic pages only · same query and titles")
-                print(String(format: "Synthetic Keypad relevance: metadata %.3f; page context %.3f", before[enriched.id] ?? 0, after[enriched.id] ?? 0))
+                print(String(format: "Synthetic Chordbook relevance: metadata %.3f; page context %.3f", before[enriched.id] ?? 0, after[enriched.id] ?? 0))
                 print(String(format: "Unrelated synthetic settings relevance with context: %.3f", after[unrelated.id] ?? 0))
                 print(await Metrics.shared.report())
             } else if args.contains("--live-smoke") {
@@ -52,17 +52,16 @@ import MoonshinePlatform
                 print(await Metrics.shared.report())
             } else if args.contains("--live-workspace-eval") {
                 let inventory = WindowInventory()
-                let allowedApps = Set(["com.apple.finder", "com.apple.TextEdit", "com.apple.Terminal", "com.mitchellh.ghostty", "ai.storyteller.vectorcraft"])
+                let allowedApps = Set(["com.apple.finder", "com.apple.TextEdit", "com.apple.Terminal"])
                 let items = await inventory.discover(apps: RunningApp.snapshot().filter { allowedApps.contains($0.bundleID) })
                 var cases: [Evaluation.Case] = []
-                for (app, query) in [("ai.storyteller.vectorcraft", "the vector illustration app"),
-                                     ("com.apple.finder", "browse my files"),
+                for (app, query) in [("com.apple.finder", "browse my files"),
                                      ("com.apple.TextEdit", "my text document"),
                                      ("com.apple.Terminal", "a terminal shell") ] {
                     let ids = items.filter { $0.bundleID == app }.map(\.id)
                     if !ids.isEmpty { cases.append(.init(query: query, intendedIDs: ids)) }
                 }
-                let terminals = items.filter { ["com.apple.Terminal", "com.mitchellh.ghostty"].contains($0.bundleID) }.map(\.id)
+                let terminals = items.filter { $0.bundleID == "com.apple.Terminal" }.map(\.id)
                 if !terminals.isEmpty { cases.append(.init(query: "a command line session", intendedIDs: terminals)) }
                 if let first = items.first { cases.append(.init(query: first.title, intendedIDs: items.filter { $0.title == first.title }.map(\.id))) }
                 cases.append(.init(query: "a live Mars rover telemetry console", intendedIDs: []))

@@ -2,7 +2,7 @@ import XCTest
 @testable import MoonshineCore
 
 final class SearchTests: XCTestCase {
-    let a = WorkspaceItem(id: "a", kind: .window, app: "Editor", title: "Orphne")
+    let a = WorkspaceItem(id: "a", kind: .window, app: "Editor", title: "Nocturne")
     let b = WorkspaceItem(id: "b", kind: .browserTab, app: "Safari", title: "Envelope documentation")
     func state() -> SearchState { var state = SearchState(); state.update([a, b]); return state }
     func testOldQueryCannotReplaceNewText() {
@@ -67,7 +67,7 @@ final class SearchTests: XCTestCase {
         state.setQuery(""); XCTAssertEqual(state.selectedID, "a"); XCTAssertEqual(state.score(b), 1)
     }
     func testLocalExactMatchCannotBeRemovedByLowSemanticScore() {
-        var state = state(); state.setQuery("Orphne"); state.apply(["a": 0], ticket: state.ticket)
+        var state = state(); state.setQuery("Nocturne"); state.apply(["a": 0], ticket: state.ticket)
         XCTAssertEqual(state.selectedID, "a"); XCTAssertEqual(state.score(a), 1)
     }
     func testUnrelatedContextDoesNotInvalidateEvidence() {

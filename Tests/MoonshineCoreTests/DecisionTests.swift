@@ -9,7 +9,7 @@ actor FakeTransport: DecisionTransport {
 }
 
 final class DecisionTests: XCTestCase {
-    let item = WorkspaceItem(id: "private-local-id", kind: .window, app: "Editor", title: "Orphne")
+    let item = WorkspaceItem(id: "private-local-id", kind: .window, app: "Editor", title: "Nocturne")
     func batch() -> DecisionBatch { DecisionBatch(query: "music", evidence: [item.evidence]) }
     func testResponseRequiresKnownUniqueAliasesAndCompleteSet() throws {
         for json in [

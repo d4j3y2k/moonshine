@@ -3,8 +3,8 @@ import XCTest
 
 final class PageContextTests: XCTestCase {
     func item() -> WorkspaceItem {
-        let url = "https://example.org/keypad?private-query#fragment"
-        return WorkspaceItem(id: "keypad", kind: .browserTab, app: "Chrome", title: "Keypad", url: url,
+        let url = "https://example.org/chordbook?private-query#fragment"
+        return WorkspaceItem(id: "chordbook", kind: .browserTab, app: "Chrome", title: "Chordbook", url: url,
             pageContext: PageContext(sourceURL: url, summary: "An interactive piano for composing chords", headings: ["Keyboard"], controls: ["Play", "Record"]))
     }
     func testContextRequiresOptInForLocalAndRemoteMatching() throws {

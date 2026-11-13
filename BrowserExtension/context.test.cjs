@@ -8,7 +8,7 @@ const tick = async () => { for (let i = 0; i < 20; i++) await new Promise(r => s
 
 async function harness(options = {}) {
   const listeners = {}, snapshots = [], captured = [];
-  let tab = {id: 7, windowId: 3, title: 'Keypad', url: 'https://example.org/keypad', incognito: false, status: 'complete', ...options.tab};
+  let tab = {id: 7, windowId: 3, title: 'Chordbook', url: 'https://example.org/chordbook', incognito: false, status: 'complete', ...options.tab};
   let sites = options.enabled === false ? [] : ['https://example.org/*'];
   let permitted = options.permitted !== false;
   const event = name => ({addListener(fn) { (listeners[name] ||= []).push(fn); }});
@@ -71,7 +71,7 @@ test('extractor reads bounded visible labels and ignores forms, editable and hid
   });
   const headings = [el('Piano workstation'), el('secret draft', {sensitive:true}), el('hidden', {hidden:true}), el('editable', {editableChild:true})];
   const controls = [el('Play'), el('Play'), el('Secret input', {sensitive:true}), el('Record')];
-  const context = vm.createContext({URL, location: {protocol:'https:', href:'https://example.org/keypad'}, getComputedStyle: () => ({}),
+  const context = vm.createContext({URL, location: {protocol:'https:', href:'https://example.org/chordbook'}, getComputedStyle: () => ({}),
     document: {contentType:'text/html',
       querySelector: selector => selector.includes('name="description"') ? {getAttribute: () => 'p'.repeat(1000)} : null,
       querySelectorAll: selector => selector.startsWith('h1') ? headings : controls}});
@@ -92,7 +92,7 @@ test('same-origin srcdoc tool descriptions are included; third-party frames are 
   const foreign = {URL:'https://third-party.org/', contentType:'text/html', querySelector() { throw Error('must not read another origin'); }};
   const frame = doc => ({contentDocument: doc, closest: () => null, getClientRects: () => [{}]});
   const document = {contentType:'text/html', querySelector: () => null, querySelectorAll: selector => selector === 'iframe' ? [frame(nested), frame(foreign)] : []};
-  const context = vm.createContext({URL, document, location:{protocol:'https:', href:'https://example.org/keypad'}, getComputedStyle: () => ({})});
+  const context = vm.createContext({URL, document, location:{protocol:'https:', href:'https://example.org/chordbook'}, getComputedStyle: () => ({})});
   vm.runInContext(contextSource, context);
   assert.match(vm.runInContext('MoonshinePageContext.collect().summary', context), /piano arcade/);
 });
